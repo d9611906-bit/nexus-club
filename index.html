@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS CLUB — Игровой сервер</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0b0e1a; --bg2: #11162b; --panel: #171e38; --panel2: #1d2547;
+    --border: #28325c; --text: #eef1ff; --muted: #9aa3c7;
+    --accent: #5865f2; --accent2: #8b9cff; --green: #3ba55c; --gold: #f5b82e;
+  }
+  body {
+    font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 80% -10%, #1c2450 0%, transparent 60%),
+                radial-gradient(900px 500px at 10% 110%, #17204a 0%, transparent 55%), var(--bg);
+    color: var(--text); line-height: 1.6; min-height: 100vh;
+    -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%;
+  }
+  a { color: inherit; text-decoration: none; }
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+  header {
+    position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
+    background: rgba(11,14,26,.7); border-bottom: 1px solid var(--border);
+  }
+  nav { display: flex; align-items: center; gap: 24px; height: 60px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; }
+  .logo-ic { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg,var(--accent),var(--accent2)); display: grid; place-items: center; }
+  .nav-links { display: flex; gap: 6px; margin-left: 8px; flex-wrap: wrap; }
+  .nav-links a { color: var(--muted); padding: 8px 12px; border-radius: 8px; font-size: 15px; font-weight: 600; transition: .2s; }
+  .nav-links a:hover { color: var(--text); background: var(--panel2); }
+  .nav-acct { margin-left: auto; }
+
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 15px; transition: .2s; color: #fff; }
+  .btn-primary { background: linear-gradient(135deg,var(--accent),var(--accent2)); }
+  .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.08); }
+  .btn-ghost { background: var(--panel2); color: var(--text); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn-fill { width: 100%; justify-content: center; }
+  .btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+  .hero { padding: 70px 0 30px; text-align: center; }
+  .badge { display: inline-block; padding: 6px 14px; border-radius: 999px; background: rgba(88,101,242,.16); border: 1px solid #3a478a; color: var(--accent2); font-size: 13px; font-weight: 700; margin-bottom: 20px; }
+  .hero h1 { font-size: clamp(38px,6vw,64px); line-height: 1.1; font-weight: 900; background: linear-gradient(120deg,#fff,var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: var(--muted); font-size: 18px; max-width: 640px; margin: 18px auto 30px; }
+  .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .stats { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 40px; }
+  .stat { background: var(--panel); border: 1px solid var(--border); padding: 18px 26px; border-radius: 14px; min-width: 130px; }
+  .stat b { display: block; font-size: 26px; }
+  .stat span { color: var(--muted); font-size: 13px; }
+
+  .section { padding: 50px 0; }
+  .sec-head h2 { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+  .sec-head span { color: var(--muted); font-size: 15px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; }
+
+  .ach-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px; }
+  .ach { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 22px; position: relative; overflow: hidden; transition: .2s; }
+  .ach:hover { transform: translateY(-4px); border-color: var(--accent); }
+  .ach .ic { width: 52px; height: 52px; border-radius: 13px; display: grid; place-items: center; font-size: 26px; background: var(--panel2); margin-bottom: 14px; }
+  .ach h3 { font-size: 16px; margin-bottom: 4px; }
+  .ach p { color: var(--muted); font-size: 14px; }
+  .ach .xp { position: absolute; top: 18px; right: 18px; color: var(--gold); font-weight: 800; font-size: 14px; }
+  .ach.rare { border-color: rgba(245,184,46,.5); }
+  .ach.rare .ic { background: rgba(245,184,46,.15); }
+
+  .member { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .member:last-child { border-bottom: none; }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-weight: 800; color: #fff; font-size: 16px; }
+  .member .mname { font-weight: 700; }
+  .member .mrole { font-size: 13px; color: var(--muted); }
+  .tag { margin-left: auto; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px; }
+  .tag.online { background: rgba(59,165,92,.18); color: #5bd780; }
+  .tag.owner { background: rgba(245,184,46,.16); color: var(--gold); }
+  .empty { padding: 36px; text-align: center; color: var(--muted); }
+
+  .auth-wrap { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; align-items: start; }
+  .auth-card { padding: 30px; }
+  .auth-card h3 { font-size: 22px; margin-bottom: 6px; }
+  .auth-card > p { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  .field input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font: inherit; outline: none; transition: .2s; }
+  .field input:focus { border-color: var(--accent); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 22px; background: var(--bg2); padding: 5px; border-radius: 11px; }
+  .tabs button { flex: 1; padding: 10px; border: none; background: transparent; color: var(--muted); font: inherit; font-weight: 700; border-radius: 8px; cursor: pointer; transition: .2s; }
+  .tabs button.active { background: var(--panel2); color: var(--text); }
+  .err { color: #ff7b7b; font-size: 14px; margin-top: 12px; min-height: 20px; }
+  .ok { color: #5bd780; font-size: 14px; margin-top: 12px; }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 14px; }
+  .hint a { color: var(--accent2); cursor: pointer; font-weight: 700; }
+  .welcome-list { color: var(--muted); padding-left: 20px; margin-top: 10px; line-height: 2; }
+
+  footer { border-top: 1px solid var(--border); margin-top: 40px; padding: 26px 0; text-align: center; color: var(--muted); font-size: 14px; }
+  footer b { color: var(--text); }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--panel2); border: 1px solid var(--accent); color: var(--text); padding: 12px 22px; border-radius: 12px; font-weight: 600; opacity: 0; pointer-events: none; transition: .3s; z-index: 100; box-shadow: 0 8px 30px rgba(0,0,0,.4); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- MINI GAME ---------- */
+  .game-wrap { display: grid; grid-template-columns: minmax(260px, 380px) 1fr; gap: 24px; align-items: start; }
+  .game-scores { display: flex; flex-direction: column; gap: 12px; }
+  .game-scores .stat { min-width: 0; }
+  .score-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .score-row:last-child { border-bottom: none; }
+  .score-row .mname { font-weight: 700; }
+  .score-row .sval { color: var(--accent2); font-weight: 800; }
+  .snake-canvas {
+    width: 100%; aspect-ratio: 1 / 1; max-width: 420px; display: block; margin: 0 auto;
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+  }
+  .game-ctrls { text-align: center; margin-top: 14px; }
+  .game-ctrls .btn { margin: 3px; min-width: 92px; }
+  .game-hint { color: var(--muted); font-size: 13px; margin-top: 10px; text-align: center; }
+  .kbd { display: inline-block; padding: 2px 7px; border-radius: 6px; background: var(--panel2); border: 1px solid var(--border); font-weight: 700; }
+  /* ---------- FORUM ---------- */
+  .forum-topic { padding: 16px 22px; border-bottom: 1px solid var(--border); cursor: pointer; transition: .2s; }
+  .forum-topic:last-child { border-bottom: none; }
+  .forum-topic:hover { background: var(--panel2); }
+  .forum-topic h3 { font-size: 17px; margin-bottom: 4px; }
+  .forum-meta { color: var(--muted); font-size: 13px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .forum-post { padding: 16px 22px; border-bottom: 1px solid var(--border); }
+  .forum-post:last-child { border-bottom: none; }
+  .forum-post .fp-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .avatar-sm { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #fff; font-size: 13px; flex-shrink: 0; }
+  .forum-post .fp-body { color: var(--text); white-space: pre-wrap; word-break: break-word; }
+  .forum-input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font: inherit; outline: none; margin-top: 8px; }
+  .forum-input:focus { border-color: var(--accent); }
+  .forum-textarea { min-height: 110px; resize: vertical; }
+  /* ---------- PROFILE ---------- */
+  .profile-grid { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
+  .pro-card { padding: 24px; text-align: center; }
+  .pro-avatar { width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 14px; display: grid; place-items: center; font-weight: 900; color: #fff; font-size: 34px; }
+  .pro-name { font-size: 22px; font-weight: 800; }
+  .pro-role { color: var(--accent2); font-weight: 700; font-size: 14px; margin: 4px 0 10px; }
+  .pro-status { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+  .pro-stat-row { color: var(--muted); font-size: 14px; margin: 6px 0; }
+  .pro-stat-row b { color: var(--text); }
+  .achievement-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 14px; }
+  .ach { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 18px; position: relative; overflow: hidden; }
+  .ach .ic { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; font-size: 24px; background: var(--panel2); margin-bottom: 12px; }
+  .ach h3 { font-size: 15px; margin-bottom: 4px; }
+  .ach p { color: var(--muted); font-size: 13px; }
+  .ach.locked { opacity: .45; filter: grayscale(1); }
+  .btn-sm { padding: 7px 12px; font-size: 13px; border-radius: 8px; }
+  .discord-strip { margin-top: 18px; padding: 12px 14px; border-radius: 12px; background: rgba(88,101,242,.12); border: 1px solid #3a478a; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); text-align: left; }
+  .discord-strip .dc-ic { font-size: 18px; }
+  .discord-strip a { color: var(--accent2); font-weight: 700; word-break: break-all; }
+  .discord-strip a:hover { text-decoration: underline; }
+
+  /* ===== АДАПТИВНОСТЬ ===== */
+  /* Широкие экраны / десктоп (>1024px) уже заданы по умолчанию */
+
+  /* Ноутбук / планшет горизонтально */
+  @media (max-width: 1024px) {
+    .container { padding: 0 16px; }
+    .profile-grid { grid-template-columns: 260px 1fr; }
+    .auth-wrap { gap: 16px; }
+  }
+
+  /* Планшет вертикально / крупные телефоны */
+  @media (max-width: 820px) {
+    nav { flex-wrap: wrap; height: auto; padding: 12px 0; gap: 10px; }
+    .nav-links { order: 3; width: 100%; justify-content: center; margin: 0; }
+    .nav-links a { padding: 8px 10px; font-size: 14px; }
+    .nav-acct { margin-left: auto; }
+    .auth-wrap { grid-template-columns: 1fr; }
+    .profile-grid { grid-template-columns: 1fr; }
+    .game-wrap { grid-template-columns: 1fr; }
+    .game-scores { flex-direction: row; flex-wrap: wrap; }
+    .game-scores .stat { flex: 1 1 130px; }
+    .hero { padding: 46px 0 24px; }
+    .hero h1 { font-size: clamp(34px, 8vw, 52px); }
+    .hero p { font-size: 16px; }
+    .stats { gap: 10px; }
+    .stat { padding: 14px 18px; min-width: 108px; }
+    .stat b { font-size: 22px; }
+    .section { padding: 38px 0; }
+    .sec-head h2 { font-size: 24px; }
+    .forum-post, .forum-topic { padding: 14px 16px; }
+    footer { padding: 20px 0; }
+    input, textarea { font-size: 16px; }
+  }
+
+  /* Телефон (<480px) */
+  @media (max-width: 480px) {
+    .container { padding: 0 12px; }
+    body { line-height: 1.5; }
+    .nav-acct .btn { padding: 8px 12px; font-size: 13px; }
+    .hero { padding: 34px 0 18px; }
+    .hero h1 { font-size: 32px; }
+    .hero p { font-size: 15px; margin: 14px auto 22px; }
+    .hero-actions { flex-direction: column; align-items: center; width: 100%; }
+    .hero-actions .btn { width: 100%; justify-content: center; }
+    .stats { flex-direction: column; align-items: stretch; }
+    .stat { width: 100%; min-width: 0; }
+    .ach-grid, .achievement-grid { grid-template-columns: 1fr; }
+    .sec-head h2 { font-size: 22px; }
+    .auth-card { padding: 22px; }
+    .game-ctrls .btn { min-width: 80px; }
+    .discord-strip { flex-wrap: wrap; }
+    .nav-links a { font-size: 13px; padding: 7px 8px; }
+  }
+
+  /* Очень узкие экраны (320px) */
+  @media (max-width: 360px) {
+    .nav-links a { font-size: 12px; padding: 6px 6px; }
+    .logo { font-size: 15px; }
+    .stat b { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <nav>
+      <a href="#top" class="logo"><span class="logo-ic">🎮</span> NEXUS CLUB</a>
+      <div class="nav-links">
+        <a href="javascript:void(0)" onclick="showView('home')">Главная</a>
+        <a href="javascript:void(0)" onclick="showView('achievements')">Достижения</a>
+        <a href="javascript:void(0)" onclick="showView('members')">Игроки</a>
+        <a href="javascript:void(0)" onclick="showView('forum')">Форум</a>
+        <a href="javascript:void(0)" onclick="showView('game')">Мини-игра</a>
+        <a href="javascript:void(0)" onclick="showView('login')">Вход</a>
+      </div>
+      <div class="nav-acct" id="navAcct"></div>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="sec-view" data-view="home">
+  <div class="hero container">
+    <span class="badge">🔥 Активное игровое сообщество</span>
+    <h1>NEXUS CLUB</h1>
+    <p>Объединяем геймеров: турниры, кланы, кроссплей и отличная компания для любимых игр.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="showView('login')">🚀 Присоединиться</button>
+      <a class="btn btn-ghost" href="javascript:void(0)" onclick="showView('achievements')">Смотреть достижения</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="statMembers">—</b><span>игроков</span></div>
+      <div class="stat"><b id="statOnline">—</b><span>онлайн</span></div>
+      <div class="stat"><b>36</b><span>достижений</span></div>
+      <div class="stat"><b>24/7</b><span>сервер</span></div>
+    </div>
+  </div>
+  </section>
+
+  <section class="sec-view section container" data-view="achievements" style="display:none">
+    <div class="sec-head"><h2>Достижения</h2><span>Открывайте награды за активность</span></div>
+    <div class="ach-grid">
+      <div class="ach"><span class="xp">+50 XP</span><div class="ic">👋</div><h3>Новобранец</h3><p>Вступите на сервер и поприветствуйте сообщество.</p></div>
+      <div class="ach"><span class="xp">+100 XP</span><div class="ic">💬</div><h3>Болтун</h3><p>Напишите первые 100 сообщений в чате.</p></div>
+      <div class="ach"><span class="xp">+150 XP</span><div class="ic">🎮</div><h3>Игрок</h3><p>Участвуйте в 10 игровых сессиях с командой.</p></div>
+      <div class="ach"><span class="xp">+200 XP</span><div class="ic">🏆</div><h3>Победитель</h3><p>Выиграйте свой первый турнир сервера.</p></div>
+      <div class="ach rare"><span class="xp">+300 XP</span><div class="ic">👑</div><h3>Легенда</h3><p>Достигните топ-10 рейтинга сервера.</p></div>
+      <div class="ach rare"><span class="xp">+500 XP</span><div class="ic">⚡</div><h3>Ветеран</h3><p>Оставайтесь активным 365 дней.</p></div>
+    </div>
+  </section>
+
+  <section class="sec-view section container" data-view="members" style="display:none">
+    <div class="sec-head"><h2>Игроки онлайн</h2><span>Полный список виден после входа</span></div>
+    <div class="panel" id="memberList"></div>
+  </section>
+
+  <section class="sec-view section container" data-view="forum" style="display:none">
+    <div class="sec-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div><h2>Форум</h2><span>Обсуждения сообщества</span></div>
+      <button class="btn btn-primary" id="forumNewBtn" onclick="forumShowForm()">✍ Новая тема</button>
+    </div>
+    <div id="forumNewForm" style="display:none;margin-bottom:20px"></div>
+    <div id="forumView"></div>
+  </section>
+
+  <section class="sec-view section container" data-view="profile" style="display:none"></section>
+
+  <section class="sec-view section container" data-view="game" style="display:none">
+    <div class="sec-head"><h2>Мини-игра «Змейка»</h2><span>Собирайте еду, растите и бейте рекорды</span></div>
+    <div class="game-wrap">
+      <div class="game-scores">
+        <div class="stat"><b id="gameScore">0</b><span>текущий счёт</span></div>
+        <div class="stat"><b id="gameBest">0</b><span>личный рекорд</span></div>
+        <div class="panel" id="gameTopTitle" style="margin-top:4px"></div>
+        <div class="panel" id="gameTop" style="overflow:hidden"></div>
+      </div>
+      <div>
+        <canvas class="snake-canvas" id="snakeCanvas" width="400" height="400"></canvas>
+        <div class="game-ctrls">
+          <button class="btn btn-primary" id="gameStart" onclick="snakeStart()">▶ Играть</button>
+        </div>
+        <p class="game-hint">Управление: <span class="kbd">←</span> <span class="kbd">↑</span> <span class="kbd">↓</span> <span class="kbd">→</span> или <span class="kbd">W A S D</span>. Пробел — пауза.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec-view section container" data-view="login" style="display:none">
+    <div class="sec-head"><h2>Вход на сервер</h2><span>Единый аккаунт для всех посетителей</span></div>
+    <div class="auth-wrap">
+      <div class="auth-card panel">
+        <h3 id="authTitle">С возвращением!</h3>
+        <p id="authSub">Введите логин и пароль, чтобы попасть на сервер.</p>
+        <div class="field"><label>Логин</label><input id="inLogin" autocomplete="username" onkeydown="if(event.key==='Enter')submitAuth()"></div>
+        <div class="field"><label>Пароль</label><input id="inPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()"></div>
+        <button class="btn btn-primary btn-fill" id="authBtn" onclick="submitAuth()">Войти</button>
+        <div class="err" id="authErr"></div>
+        <div class="ok" id="authOk"></div>
+        <p class="hint" id="authHint">Аккаунты создаются администратором. Нет доступа — обратитесь к администратору.</p>
+      </div>
+
+      <div class="auth-card panel" id="welcomeCard">
+        <h3>Что даёт аккаунт?</h3>
+        <p>Единый аккаунт живёт на сервере и виден всем посетителям сайта:</p>
+        <ul class="welcome-list">
+          <li>Полный список игроков и их ранги</li>
+          <li>Личные достижения и очки опыта</li>
+          <li>Участие в турнирах и кланах</li>
+          <li>Приватные каналы сообщества</li>
+        </ul>
+        <p class="hint">Пароли хранятся в защищённом виде (хэш), вход выполняется на сервере, а страница работает в любом браузере.</p>
+        <div class="discord-strip">
+          <span class="dc-ic">💬</span>
+          <span>Написать в Discord: <a href="https://discord.com/users/lemon041609" target="_blank" rel="noopener">lemon041609</a></span>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <b>NEXUS CLUB</b> · Игровое сообщество<br>
+    Единый аккаунт · данные хранятся на сервере<br>
+    © <span id="copyYear"></span> Dimon_20201 · Все права защищены
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var AVA = ["#5865f2","#3ba55c","#eb459e","#f5b82e","#00b0f4","#9b59b6","#e67e22","#2ecc71"];
+  function colorFor(s){ var h=0; for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return AVA[h%AVA.length]; }
+  var copyYear = document.getElementById('copyYear');
+  if(copyYear){ copyYear.textContent = new Date().getFullYear(); }
+  function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  async function api(path, opts){
+    opts = opts || {};
+    opts.headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+    var r = await fetch(path, opts);
+    var j = {};
+    try { j = await r.json(); } catch(e){}
+    if(!r.ok && !j.ok) throw new Error(j.error || 'Ошибка запроса');
+    return j;
+  }
+
+  async function submitAuth(){
+    var login = document.getElementById('inLogin').value.trim();
+    var pass = document.getElementById('inPass').value;
+    var err = document.getElementById('authErr');
+    var okEl = document.getElementById('authOk');
+    err.textContent=''; okEl.textContent='';
+    if(!login || !pass){ err.textContent='Заполните логин и пароль.'; return; }
+    var btn = document.getElementById('authBtn');
+    btn.disabled = true; btn.textContent = 'Вход…';
+    try{
+      var r = await api('/api/login', {method:'POST', body: JSON.stringify({login:login, password:pass})});
+      showLoggedIn(r.user);
+      toast('Вы вошли как '+r.user.login);
+    }catch(e){
+      err.textContent = e.message;
+    }finally{
+      btn.disabled=false; btn.textContent = 'Войти';
+    }
+  }
+
+  function showLoggedIn(u){
+    document.getElementById('inLogin').value='';
+    document.getElementById('inPass').value='';
+    renderNav(u);
+    var wc = document.getElementById('welcomeCard');
+    wc.innerHTML = '<h3>Вы — часть сообщества 🎉</h3><div class="stat" style="min-width:auto;margin-top:16px"><b>'+esc(u.login)+'</b><span>аккаунт онлайн</span></div><p class="hint">Вы вошли как '+esc(u.login)+'. Полный список игроков открыт ниже.</p>';
+    loadMembers();
+    loadStats();
+  }
+
+  async function logout(){
+    try { await api('/api/logout', {method:'POST', body:'{}'}); } catch(e){}
+    renderNav(null); loadMembers(); loadStats();
+    location.reload();
+  }
+
+  function showView(name){
+    var views = document.querySelectorAll('.sec-view');
+    for(var i=0;i<views.length;i++){
+      views[i].style.display = views[i].getAttribute('data-view') === name ? '' : 'none';
+    }
+    var links = document.querySelectorAll('.nav-links a');
+    for(var j=0;j<links.length;j++){
+      var active = links[j].getAttribute('onclick') && links[j].getAttribute('onclick').indexOf("'"+name+"'") !== -1;
+      links[j].classList.toggle('active', active);
+    }
+    if(name === 'profile'){ openProfile(); }
+    if(name === 'forum'){ forumLoadList(); }
+    if(name === 'members'){ loadMembers(); }
+    if(name === 'game'){ setTimeout(function(){ try{ snakeInit(); }catch(e){} }, 50); }
+    window.scrollTo(0,0);
+  }
+
+  function renderNav(u){
+    var box = document.getElementById('navAcct');
+    if(u){
+      box.innerHTML = '<a href="javascript:void(0)" class="btn btn-ghost" onclick="showView(\'profile\')">👤 Профиль</a> <button class="btn btn-ghost" onclick="logout()">Выйти · '+esc(u.login)+'</button>';
+    }else{
+      box.innerHTML = '<a href="javascript:void(0)" class="btn btn-primary" onclick="showView(\'login\')">Войти</a>';
+    }
+  }
+
+  async function loadStats(){
+    try{
+      var r = await api('/api/stats');
+      document.getElementById('statMembers').textContent = r.members;
+      document.getElementById('statOnline').textContent = r.online;
+    }catch(e){}
+  }
+
+  async function loadMembers(){
+    var host = document.getElementById('memberList');
+    var u = null;
+    try { u = (await api('/api/me')).user; } catch(e){}
+    if(!u){
+      host.innerHTML = '<div class="empty">🔒 Войдите, чтобы увидеть полный список игроков</div>';
+      loadStats(); return;
+    }
+    try{
+      var r = await api('/api/members');
+      host.innerHTML = '';
+      r.members.forEach(function(m){
+        var row = document.createElement('div');
+        row.className='member';
+        var av = document.createElement('div'); av.className='avatar'; av.style.background=colorFor(m.name); av.textContent=(m.name[0]||'?');
+        var info = document.createElement('div');
+        info.innerHTML = '<div class="mname"></div><div class="mrole">'+esc(m.role)+'</div>';
+        info.firstElementChild.textContent = m.name;
+        var b = document.createElement('span'); b.className='tag online'; b.textContent='онлайн';
+        row.appendChild(av); row.appendChild(info); row.appendChild(b);
+        host.appendChild(row);
+      });
+    }catch(e){
+      host.innerHTML = '<div class="empty">Не удалось загрузить список: '+esc(e.message)+'</div>';
+    }
+  }
+
+  function toast(msg){
+    var t = document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(t._t); t._t=setTimeout(function(){ t.classList.remove('show'); },3000);
+  }
+
+  /* ---------- ПРИСУТСТВИЕ (heartbeat) ---------- */
+  function heartbeatClientId(){
+    try {
+      var id = localStorage.getItem('nexus_client');
+      if(!id){ id = 'c-' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('nexus_client', id); }
+      return id;
+    } catch(e){ return 'c-' + Math.random().toString(36).slice(2) + Date.now().toString(36); }
+  }
+  async function heartbeat(){
+    try {
+      var r = await fetch('/api/heartbeat', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({client: heartbeatClientId()})});
+      var j = await r.json();
+      if(j.online !== undefined){ document.getElementById('statOnline').textContent = j.online; }
+    } catch(e){}
+  }
+
+  (async function init(){
+    var u = null;
+    try { u = (await api('/api/me')).user; } catch(e){}
+    renderNav(u);
+    loadStats();
+    loadMembers();
+    forumLoadList();
+    heartbeat();
+    setInterval(heartbeat, 20000);
+    showView('home');
+  })();
+
+  /* ---------- ФОРУМ ---------- */
+  var forumData = { threadId: null, list: [] };
+
+  async function forumLoadList(){
+    var host = document.getElementById('forumView');
+    try {
+      var r = await api('/api/forum/threads');
+      forumData.list = r.threads;
+      if(!forumData.list.length){
+        host.innerHTML = '<div class="panel"><div class="empty">Пока нет тем. Создайте первую!</div></div>';
+        return;
+      }
+      host.innerHTML = '<div class="panel"></div>';
+      var box = host.firstElementChild;
+      forumData.list.forEach(function(t){
+        var d = document.createElement('div');
+        d.className = 'forum-topic';
+        d.innerHTML = '<h3>'+esc(t.title)+'</h3><div class="forum-meta"><span>✍ '+esc(t.author)+'</span><span>🗓 '+esc(t.created_at.split('T')[0])+'</span><span>'+t.posts+' ответов</span></div>';
+        d.onclick = function(){ forumOpen(t.id); };
+        box.appendChild(d);
+      });
+    }catch(e){
+      host.innerHTML = '<div class="panel"><div class="empty">Ошибка: '+esc(e.message)+'</div></div>';
+    }
+  }
+
+  function forumShowForm(){
+    var form = document.getElementById('forumNewForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    if(form.style.display === 'block'){
+      form.innerHTML = '<div class="panel" style="padding:24px">' +
+        '<h3 style="margin-bottom:14px">Новая тема</h3>' +
+        '<input class="forum-input" id="forumTitle" placeholder="Заголовок темы">' +
+        '<textarea class="forum-input forum-textarea" id="forumBody" placeholder="Текст сообщения"></textarea>' +
+        '<div style="margin-top:14px;display:flex;gap:10px"><button class="btn btn-primary btn-sm" onclick="forumCreate()">Опубликовать</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="forumShowForm()">Отмена</button></div>' +
+        '<div class="err" id="forumErr"></div></div>';
+    } else {
+      form.innerHTML = '';
+    }
+  }
+
+  async function forumCreate(){
+    var title = document.getElementById('forumTitle').value.trim();
+    var body = document.getElementById('forumBody').value.trim();
+    var err = document.getElementById('forumErr');
+    err.textContent = '';
+    if(!title || !body){ err.textContent = 'Заполните заголовок и текст.'; return; }
+    try {
+      await api('/api/forum/threads', {method:'POST', body: JSON.stringify({title:title, body:body})});
+      forumShowForm();
+      forumLoadList();
+      toast('Тема создана');
+    }catch(e){ err.textContent = e.message; }
+  }
+
+  async function forumOpen(id){
+    var host = document.getElementById('forumView');
+    try {
+      var r = await api('/api/forum/threads/'+id);
+      forumData.threadId = id;
+      var html = '<a class="btn btn-ghost btn-sm" onclick="forumLoadList()">← Назад к темам</a>';
+      var t = r.thread, posts = r.posts;
+      html += '<div class="panel" style="margin-top:14px"><div class="forum-post">' +
+        '<div class="fp-head"><div class="avatar-sm" style="background:'+colorFor(t.author)+'">'+esc(t.author[0])+'</div>' +
+        '<h3>'+esc(t.title)+'</h3></div>' +
+        '<div class="forum-meta" style="margin-bottom:10px">✍ '+esc(t.author)+' · '+esc(t.created_at)+'</div>' +
+        '<div class="fp-body">'+esc(t.body)+'</div></div>';
+      posts.forEach(function(p){
+        html += '<div class="forum-post"><div class="fp-head"><div class="avatar-sm" style="background:'+colorFor(p.author)+'">'+esc(p.author[0])+'</div>' +
+          '<div class="forum-meta">'+esc(p.author)+' · '+esc(p.created_at)+'</div></div>' +
+          '<div class="fp-body">'+esc(p.body)+'</div></div>';
+      });
+      html += '</div>' +
+        '<div class="panel" style="margin-top:14px;padding:20px">' +
+        '<textarea class="forum-input forum-textarea" id="replyBody" placeholder="Ваш ответ..."></textarea>' +
+        '<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="forumReply('+id+')">Ответить</button>' +
+        '<div class="err" id="replyErr"></div></div>';
+      host.innerHTML = html;
+    }catch(e){
+      host.innerHTML = '<div class="empty">Ошибка: '+esc(e.message)+'</div>';
+    }
+  }
+
+  async function forumReply(id){
+    var body = document.getElementById('replyBody').value.trim();
+    var err = document.getElementById('replyErr');
+    err.textContent = '';
+    if(!body){ err.textContent = 'Пустое сообщение.'; return; }
+    try {
+      await api('/api/forum/threads/'+id, {method:'POST', body: JSON.stringify({body:body})});
+      forumOpen(id);
+      toast('Ответ опубликован');
+    }catch(e){ err.textContent = e.message; }
+  }
+
+  /* ---------- ПРОФИЛЬ ---------- */
+  async function openProfile(){
+    var sec = document.querySelector('.sec-view[data-view="profile"]');
+    if(!sec) return;
+    try {
+      var r = await api('/api/profile');
+      var p = r.profile;
+      var col = p.avatar_color || colorFor(p.login);
+      var achHtml = '';
+      var allAch = [
+        {c:'member', ic:'👋', t:'Член сообщества', d:'Создали аккаунт'},
+        {c:'forum', ic:'💬', t:'Автор', d:'Написали сообщение на форуме'},
+        {c:'thread', ic:'🧵', t:'Движок форума', d:'Создали тему'},
+        {c:'gamer', ic:'🎮', t:'Геймер', d:'Набрали очки в игре'},
+        {c:'pro', ic:'🏆', t:'Рекордсмен', d:'Счёт от 100'},
+        {c:'legend', ic:'👑', t:'Легенда', d:'Счёт от 300'}
+      ];
+      var earned = {};
+      p.achievements.forEach(function(a){ earned[a.code] = true; });
+      allAch.forEach(function(a){
+        var on = earned[a.c];
+        achHtml += '<div class="ach'+(on?'':' locked')+'"><div class="ic">'+a.ic+'</div><h3>'+a.t+'</h3><p>'+a.d+'</p></div>';
+      });
+      sec.innerHTML =
+        '<div class="profile-grid">' +
+          '<div class="auth-card panel pro-card">' +
+            '<div class="pro-avatar" style="background:'+col+'">'+esc(p.login[0])+'</div>' +
+            '<div class="pro-name">'+esc(p.login)+'</div>' +
+            '<div class="pro-role">'+esc(p.role)+(p.admin?' · 🛡 Админ':'')+'</div>' +
+            '<div class="pro-status" id="proStatusText">'+esc(p.status || 'Статус пока не задан')+'</div>' +
+            '<div class="pro-stat-row">📅 Регистрация: <b>'+esc((p.joined||'').split('T')[0])+'</b></div>' +
+            '<div class="pro-stat-row">🟢 Сейчас на сайте: <b>'+ (p.online?'да':'нет') +'</b></div>' +
+            '<div class="pro-stat-row">💬 Сообщений: <b>'+p.posts+'</b></div>' +
+            '<div class="pro-stat-row">📌 Тем: <b>'+p.threads+'</b></div>' +
+            '<div class="pro-stat-row">🏆 Лучший счёт: <b>'+p.best_score+'</b></div>' +
+            '<button class="btn btn-ghost btn-sm" style="margin-top:14px" onclick="profileEdit()">✏ Изменить</button>' +
+          '</div>' +
+          '<div>' +
+            '<div class="sec-head"><h2>Достижения</h2><span>'+p.achievements.length+' из '+allAch.length+' открыто</span></div>' +
+            '<div class="achievement-grid">'+achHtml+'</div>' +
+          '</div>' +
+        '</div>';
+    }catch(e){
+      sec.innerHTML = '<div class="panel"><div class="empty">'+esc(e.message)+'</div></div>';
+    }
+  }
+
+  function profileEdit(){
+    var t = document.getElementById('proStatusText');
+    t.innerHTML = '<div class="field" style="text-align:left"><label>Статус</label><input class="forum-input" id="profStatusIn"></div>' +
+      '<div class="field" style="text-align:left;margin-top:8px"><label>О себе</label><input class="forum-input" id="profBioIn"></div>' +
+      '<div class="field" style="text-align:left;margin-top:8px"><label>Цвет аватара (hex)</label><input class="forum-input" id="profColorIn" placeholder="#5865f2"></div>' +
+      '<button class="btn btn-primary btn-sm" onclick="profileSave()">Сохранить</button> <button class="btn btn-ghost btn-sm" onclick="openProfile()">Отмена</button>';
+    t.scrollIntoView({behavior:'smooth'});
+  }
+
+  async function profileSave(){
+    var status = document.getElementById('profStatusIn').value.trim();
+    var bio = document.getElementById('profBioIn').value.trim();
+    var color = document.getElementById('profColorIn').value.trim();
+    try {
+      await api('/api/profile/save', {method:'POST', body: JSON.stringify({status:status, bio:bio, avatar_color:color})});
+      toast('Профиль обновлён');
+      openProfile();
+    }catch(e){ toast(e.message); }
+  }
+
+  /* ---------- МИНИ-ИГРА ЗМЕЙКА ---------- */
+  var snake = {
+    ctx: null, canvas: null, grid: 20, cells: 20,
+    snakeArr: [], dir: {x:1,y:0}, nextDir: null, food: null,
+    score: 0, best: 0, running: false, timer: null, speed: 110, paused: false
+  };
+
+  function snakeInit(){
+    var c = document.getElementById('snakeCanvas');
+    snake.canvas = c;
+    snake.ctx = c.getContext('2d');
+    snake.best = parseInt(localStorage.getItem('nexus_snake_best') || '0', 10) || 0;
+    document.getElementById('gameBest').textContent = snake.best;
+    snakeDraw();
+    loadTopScores();
+  }
+
+  function snakeReset(){
+    snake.snakeArr = [ {x:7,y:10}, {x:6,y:10}, {x:5,y:10} ];
+    snake.dir = {x:1,y:0}; snake.nextDir = null;
+    snake.score = 0; snake.paused = false;
+    document.getElementById('gameScore').textContent = '0';
+    snakePlaceFood();
+    snakeDraw();
+  }
+
+  function snakePlaceFood(){
+    var cells = snake.cells;
+    var free = false, x, y;
+    while(!free){
+      x = Math.floor(Math.random()*cells);
+      y = Math.floor(Math.random()*cells);
+      free = snake.snakeArr.every(function(s){ return !(s.x===x && s.y===y); });
+    }
+    snake.food = {x:x, y:y};
+  }
+
+  function snakeStart(){
+    if(snake.timer) clearInterval(snake.timer);
+    snakeReset();
+    snake.running = true;
+    document.getElementById('gameStart').textContent = 'Продолжить';
+    snake.timer = setInterval(snakeTick, snake.speed);
+  }
+
+  function snakePause(){
+    if(!snake.running) return;
+    snake.paused = !snake.paused;
+    document.getElementById('gameStart').textContent = snake.paused ? '▶ Играть' : 'Пауза';
+  }
+
+  function snakeTick(){
+    if(snake.paused || snake.snakeArr.length === 0) return;
+    if(snake.nextDir){ snake.dir = snake.nextDir; snake.nextDir = null; }
+    var head = snake.snakeArr[0];
+    var nx = head.x + snake.dir.x;
+    var ny = head.y + snake.dir.y;
+    var cells = snake.cells;
+    if(nx < 0 || ny < 0 || nx >= cells || ny >= cells){ snakeGameOver(); return; }
+    for(var i=0;i<snake.snakeArr.length;i++){
+      if(snake.snakeArr[i].x===nx && snake.snakeArr[i].y===ny){ snakeGameOver(); return; }
+    }
+    snake.snakeArr.unshift({x:nx, y:ny});
+    if(nx===snake.food.x && ny===snake.food.y){
+      snake.score += 10;
+      document.getElementById('gameScore').textContent = snake.score;
+      snakePlaceFood();
+    }else{
+      snake.snakeArr.pop();
+    }
+    snakeDraw();
+  }
+
+  function snakeDraw(){
+    var ctx = snake.ctx, cells = snake.cells, g = snake.canvas.width / cells;
+    ctx.clearRect(0,0,snake.canvas.width,snake.canvas.height);
+    ctx.fillStyle = '#11162b'; ctx.fillRect(0,0,snake.canvas.width,snake.canvas.height);
+    ctx.fillStyle = '#1a2140';
+    for(var x=0;x<cells;x++) for(var y=0;y<cells;y++) if((x+y)%2===0) ctx.fillRect(x*g+0.5,y*g+0.5,g-1,g-1);
+    if(snake.food){
+      ctx.fillStyle = '#f44336';
+      ctx.beginPath(); ctx.arc(snake.food.x*g+g/2, snake.food.y*g+g/2, g*0.42, 0, Math.PI*2); ctx.fill();
+    }
+    for(var i=0;i<snake.snakeArr.length;i++){
+      var s = snake.snakeArr[i];
+      ctx.fillStyle = i===0 ? '#8b9cff' : '#5865f2';
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(s.x*g+1.5, s.y*g+1.5, g-3, g-3, 5) : ctx.rect(s.x*g+1.5, s.y*g+1.5, g-3, g-3);
+      ctx.fill();
+    }
+  }
+
+  function snakeGameOver(){
+    snake.running = false;
+    if(snake.timer){ clearInterval(snake.timer); snake.timer = null; }
+    document.getElementById('gameStart').textContent = '▶ Играть';
+    if(snake.score > snake.best){
+      snake.best = snake.score;
+      try { localStorage.setItem('nexus_snake_best', String(snake.best)); } catch(e){}
+      document.getElementById('gameBest').textContent = snake.best;
+      toast('Новый рекорд: '+snake.best);
+    }
+    snakeSubmitScore();
+    snakeDraw();
+  }
+
+  async function snakeSubmitScore(){
+    var name = null;
+    try { var u = (await api('/api/me')).user; if(u) name = u.login; } catch(e){}
+    try {
+      await fetch('/api/game/score', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({score: snake.score})});
+      loadTopScores();
+    } catch(e){}
+  }
+
+  async function loadTopScores(){
+    var top = document.getElementById('gameTop');
+    var title = document.getElementById('gameTopTitle');
+    try {
+      var r = await api('/api/game/top');
+      title.innerHTML = '<div style="padding:14px 20px;border-bottom:1px solid var(--border);font-weight:700">🏆 Таблица рекордов</div>';
+      if(r.top && r.top.length){
+        top.innerHTML = '';
+        r.top.forEach(function(sc, i){
+          var d = document.createElement('div');
+          d.className = 'score-row';
+          d.innerHTML = '<div class="mname">'+esc(sc.name)+'</div><div class="sval">'+sc.score+'</div>';
+          top.appendChild(d);
+        });
+      } else {
+        top.innerHTML = '<div class="empty">Пока нет рекордов. Станьте первым!</div>';
+      }
+    } catch(e){
+      top.innerHTML = '<div class="empty">Рекорды будут после входа</div>';
+    }
+  }
+
+  document.addEventListener('keydown', function(e){
+    var k = e.key;
+    var keyMap = { 'ArrowUp':{x:0,y:-1}, 'ArrowDown':{x:0,y:1}, 'ArrowLeft':{x:-1,y:0}, 'ArrowRight':{x:1,y:0},
+                   'w':{x:0,y:-1}, 's':{x:0,y:1}, 'a':{x:-1,y:0}, 'd':{x:1,y:0},
+                   'W':{x:0,y:-1}, 'S':{x:0,y:1}, 'A':{x:-1,y:0}, 'D':{x:1,y:0} };
+    if(k === ' '){ e.preventDefault(); snakePause(); return; }
+    var d = keyMap[k];
+    if(d && snake.running){
+      e.preventDefault();
+      if(snake.dir.x !== -d.x || snake.dir.y !== -d.y){
+        snake.nextDir = d;
+      }
+    }
+  });
+
+  snakeInit();
+</script>
+</body>
+</html>
